@@ -78,7 +78,7 @@ const describeReducer = (name, structure, expect) => {
         .toBeSize(0)
     })
 
-    it('should not modify state when action has no form', () => {
+    it('should not modify state when action has no form!', () => {
       const state = { foo: 'bar' }
       expect(reducer(state, { type: 'SOMETHING_ELSE' })).toBe(state)
     })

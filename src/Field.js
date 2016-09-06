@@ -17,6 +17,7 @@ const createField = ({ deepEqual, getIn, setIn }) => {
         getIn
       }, props.name)
       this.normalize = this.normalize.bind(this)
+      // console.log(context._reduxForm, 'console at Field')
     }
 
     shouldComponentUpdate(nextProps, nextState) {
@@ -25,6 +26,7 @@ const createField = ({ deepEqual, getIn, setIn }) => {
 
     componentWillMount() {
       this.context._reduxForm.register(this.name, 'Field')
+      this.context._reduxForm.registerConditional(this.name, this.conditional)  
     }
 
     componentWillReceiveProps(nextProps) {
@@ -40,6 +42,8 @@ const createField = ({ deepEqual, getIn, setIn }) => {
     }
 
     componentWillUnmount() {
+      // unregister conditional
+      this.context._reduxForm.registerConditional(this.name)
       this.context._reduxForm.unregister(this.name)
     }
 
@@ -48,6 +52,10 @@ const createField = ({ deepEqual, getIn, setIn }) => {
         'If you want to access getRenderedComponent(), ' +
         'you must specify a withRef prop to Field')
       return this.refs.connected.getWrappedInstance().getRenderedComponent()
+    }
+
+    get conditional() {
+      return this.props.conditional
     }
 
     get name() {
@@ -83,11 +91,13 @@ const createField = ({ deepEqual, getIn, setIn }) => {
     }
 
     render() {
-      return createElement(this.ConnectedField, {
+      const visible = getIn(this.context._reduxForm.conditions, `${this.name}.visible`)
+      return visible === undefined || visible ? createElement(this.ConnectedField, {
         ...this.props,
         normalize: this.normalize,
         ref: 'connected'
-      })
+      }) : null
+
     }
   }
 

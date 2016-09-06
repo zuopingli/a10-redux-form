@@ -13,6 +13,7 @@ const structure = {
   deepEqual,
   deleteIn,
   fromJS: value => value,
+  toJS: value => value, 
   size: array => array ? array.length : 0,
   some,
   splice

@@ -303,6 +303,7 @@ const createReduxForm =
               asyncValidating,
               blur,
               change,
+              conditions,
               destroy,
               destroyOnUnmount,
               dirty,
@@ -321,6 +322,7 @@ const createReduxForm =
               propNamespace,
               registeredFields,
               registerField,
+              registerConditional,
               reset,
               setSubmitFailed,
               setSubmitSucceeded,
@@ -342,7 +344,7 @@ const createReduxForm =
               valid,
               values,
               ...rest
-            } = this.props
+            } = this.props            
             /* eslint-enable no-unused-vars */
             const reduxFormProps = {
               anyTouched,
@@ -350,6 +352,7 @@ const createReduxForm =
               asyncValidating,
               blur,
               change,
+              conditions,
               destroy,
               dirty,
               dispatch,
@@ -409,6 +412,7 @@ const createReduxForm =
             const asyncErrors = getIn(formState, 'asyncErrors')
             const syncErrors = getIn(formState, 'syncErrors') || {}
             const registeredFields = getIn(formState, 'registeredFields') || []
+            const conditions = getIn(formState, 'conditions') || {}
             const valid = isValid(form, getFormState)(state)
             const anyTouched = !!getIn(formState, 'anyTouched')
             const submitting = !!getIn(formState, 'submitting')
@@ -425,6 +429,7 @@ const createReduxForm =
               invalid: !valid,
               pristine,
               registeredFields,
+              conditions,
               submitting,
               submitFailed,
               submitSucceeded,
@@ -503,6 +508,7 @@ const createReduxForm =
           }
 
           get values() {
+            // console.log(this.props.values, 'get submit values')            
             return this.refs.wrapped.getWrappedInstance().getValues()
           }
 

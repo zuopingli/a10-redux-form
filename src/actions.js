@@ -1,6 +1,6 @@
 import {
   ARRAY_INSERT, ARRAY_MOVE, ARRAY_POP, ARRAY_PUSH, ARRAY_REMOVE, ARRAY_REMOVE_ALL, ARRAY_SHIFT,
-  ARRAY_SPLICE, ARRAY_SWAP, ARRAY_UNSHIFT, AUTOFILL, BLUR, CHANGE, DESTROY, FOCUS, INITIALIZE,
+  ARRAY_SPLICE, ARRAY_SWAP, ARRAY_UNSHIFT, AUTOFILL, BLUR, CHANGE, DESTROY, FOCUS, INITIALIZE, REGISTER_CONDITIONAL,
   REGISTER_FIELD, RESET, SET_SUBMIT_FAILED, SET_SUBMIT_SUCCEEDED, START_ASYNC_VALIDATION, START_SUBMIT,
   STOP_ASYNC_VALIDATION, STOP_SUBMIT, TOUCH, UNREGISTER_FIELD, UNTOUCH, UPDATE_SYNC_ERRORS
 } from './actionTypes'
@@ -67,6 +67,9 @@ export const focus = (form, field) =>
 
 export const initialize = (form, values, keepDirty) =>
   ({ type: INITIALIZE, meta: { form, keepDirty }, payload: values })
+
+export const registerConditional = (form, name, conditional) =>
+  ({ type: REGISTER_CONDITIONAL, meta: { form }, payload: { name, conditional } })
 
 export const registerField = (form, name, type) =>
   ({ type: REGISTER_FIELD, meta: { form }, payload: { name, type } })

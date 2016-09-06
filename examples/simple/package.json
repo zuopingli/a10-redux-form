@@ -5,7 +5,8 @@
     "build:webpack": "cross-env NODE_ENV=production webpack --config webpack.config.prod.js",
     "build": "npm run clean && npm run build:webpack",
     "lint": "eslint src",
-    "start": "node devServer.js",
+    "start-test": "node devServer.js",
+    "start": "./node_modules/.bin/webpack-dev-server --history-api-fallback --inline --hot --progress --port 3040 --config webpack.config.dev.js",
     "prepublish": "npm run lint && npm run build"
   },
   "dependencies": {

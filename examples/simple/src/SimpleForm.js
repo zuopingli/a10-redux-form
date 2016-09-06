@@ -6,17 +6,24 @@ const SimpleForm = (props) => {
   return (
     <form onSubmit={handleSubmit}>
       <div>
+        <label>Condition</label>
+        <div>
+          <Field name="checkConditional" component="input" type="checkbox" />
+        </div>
+      </div>  
+      <div>
         <label>First Name</label>
         <div>
-          <Field name="firstName" component="input" type="text" placeholder="First Name"/>
+          <Field name="firstName" component="input" type="text" placeholder="First Name" conditional={{ checkConditional: true }}/>
         </div>
       </div>
       <div>
         <label>Last Name</label>
         <div>
-          <Field name="lastName" component="input" type="text" placeholder="Last Name"/>
+          <Field name="lastName" component="input" type="text" placeholder="Last Name" conditional={{ firstName: 'zli' }} />
         </div>
       </div>
+    
       <div>
         <label>Email</label>
         <div>
@@ -33,7 +40,7 @@ const SimpleForm = (props) => {
       <div>
         <label>Favorite Color</label>
         <div>
-          <Field name="favoriteColor" component="select">
+          <Field name="favoriteColor" component="select" conditional={{ sex: 'male' }}>
             <option></option>
             <option value="ff0000">Red</option>
             <option value="00ff00">Green</option>
@@ -62,5 +69,8 @@ const SimpleForm = (props) => {
 }
 
 export default reduxForm({
-  form: 'simple'  // a unique identifier for this form
+  form: 'simple',
+  initialValues: {
+    'checkConditional': false
+  }
 })(SimpleForm)

@@ -20,6 +20,7 @@ module.exports = {
   ],
   resolve: {
     modulesDirectories: [
+      '../../src',
       'src',
       'node_modules'
     ],

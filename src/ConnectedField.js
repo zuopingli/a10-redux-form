@@ -9,7 +9,9 @@ const createConnectedField = ({
   change,
   focus,
   getFormState,
-  initialValues
+  initialValues,
+  register, 
+  unregister
 }, { deepEqual, getIn }, name) => {
 
   const propInitialValue = initialValues && getIn(initialValues, name)
@@ -39,7 +41,7 @@ const createConnectedField = ({
     }
 
     render() {
-      const { component, withRef, ...rest } = this.props
+      const { component, withRef, conditional, ...rest } = this.props // eslint-disable-line no-unused-vars
       const { custom, ...props } = createFieldProps(getIn,
         name,
         {
@@ -65,12 +67,14 @@ const createConnectedField = ({
 
   ConnectedField.propTypes = {
     component: PropTypes.oneOfType([ PropTypes.func, PropTypes.string ]).isRequired,
+    conditional: PropTypes.oneOfType([ PropTypes.func, PropTypes.string , PropTypes.object ]),    
     props: PropTypes.object
   }
 
   const connector = connect(
     (state, ownProps) => {
       const formState = getFormState(state)
+
       const initialState = getIn(formState, `initial.${name}`)
       const initial = initialState === undefined ? propInitialValue : initialState
       const value = getIn(formState, `values.${name}`)
@@ -87,7 +91,7 @@ const createConnectedField = ({
         submitting,
         syncError,
         value,
-        _value: ownProps.value // save value passed in (for checkboxes)
+        _value: ownProps.value
       }
     },
     undefined,

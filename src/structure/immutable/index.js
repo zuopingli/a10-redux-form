@@ -14,6 +14,7 @@ const structure = {
   deleteIn: (state, field) => state.deleteIn(toPath(field)),
   fromJS: jsValue => fromJS(jsValue, (key, value) =>
     Iterable.isIndexed(value) ? value.toList() : value.toMap()),
+  toJS: jsValue => jsValue ? jsValue.toJS() : jsValue,
   size: list => list ? list.size : 0,
   some: (iterable, callback) => Iterable.isIterable(iterable) ? iterable.some(callback) : false,
   splice
