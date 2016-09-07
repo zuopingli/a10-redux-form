@@ -229,6 +229,51 @@ const describeField = (name, structure, combineReducers, expect) => {
       expect(getConditionsVisible(store.getState(), 'rich')).toEqual(true)
 
     })
+
+    it('should reset to initial condition and caculate all elements visible', () => {
+      const store = makeStore({
+        testForm: {
+          values: {
+            male: false,
+            money: 10000,
+            rich: false
+          }
+        }
+      })
+      const maleInput = createSpy(props => <input {...props.input}/>).andCallThrough()
+      const moneyInput = createSpy(props => <input {...props.input}/>).andCallThrough()
+      const richInput = createSpy(props => <input {...props.input}/>).andCallThrough()
+      class Form extends Component {
+        render() {
+          return (
+            <div>
+              <Field name="male" component={maleInput} type="text"/>
+              <Field name="money" component={moneyInput} conditional={{ male: true }}/>
+              <Field name="rich" component={richInput} conditional={{ money: 1000 }}/>
+            </div>
+          )
+        }
+      }
+      const Decorated = reduxForm({ form: 'testForm' })(Form)
+      const dom = TestUtils.renderIntoDocument(
+        <Provider store={store}>
+          <Decorated/>
+        </Provider>
+      )      
+      // if switch visible on, some kids visible on
+      maleInput.calls[ 0 ].arguments[ 0 ].input.onChange(true)
+      expect(getConditionsVisible(store.getState(), 'money')).toEqual(true)
+      expect(getConditionsVisible(store.getState(), 'rich')).toEqual(false)
+
+      const stub = TestUtils.findRenderedComponentWithType(dom, Decorated)
+      expect(stub.reset).toBeA('function')
+      stub.reset()
+
+      // after reseting , expect all conditions and visible are right
+      expect(getConditionsVisible(store.getState(), 'male')).toEqual(true)
+      expect(getConditionsVisible(store.getState(), 'money')).toEqual(false)
+      expect(getConditionsVisible(store.getState(), 'rich')).toEqual(false)      
+    })
   
   })
 }

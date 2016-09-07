@@ -65,6 +65,31 @@ const createReducer = structure => {
     return result
   }
 
+  const setVisible = (conditions, parentFieldName, parentIsVisible, state) => {
+    let result = empty
+    for (let elementName in conditions) { 
+      const elementConditional = conditions[elementName]['conditional'] || {}
+      
+      for (let condName in elementConditional) {
+        // only find those field name depend on current changing field name          
+        if (condName === parentFieldName) {
+          const parentValue = getIn(state, `values.${parentFieldName}`)
+          let condValue = elementConditional[condName]
+          if (typeof condValue == 'function') {
+            condValue = condValue.call(null, state, parentValue)
+          }   
+          const isNewVisible = parentIsVisible && deepEqual(condValue, parentValue)
+          result = setIn(result, `conditions.${elementName}.visible`, isNewVisible )
+          // find it's child and also set invisible
+          result = merge(result, setVisible(conditions, elementName, isNewVisible, state))
+          break
+        }
+      }                   
+    }
+    
+    return result
+  }
+
   const behaviors = {
     [ARRAY_INSERT](state, { meta: { field, index }, payload }) {
       return arraySplice(state, field, index, 0, payload)
@@ -169,28 +194,8 @@ const createReducer = structure => {
 
       // Search all conditional which depends on this field and update visible
       const conditions = clone(toJS(getIn(result, 'conditions')))
-      const setVisible = (conditions, parentFieldName, parentIsVisible) => {
-        for (let elementName in conditions) { 
-          const elementConditional = conditions[elementName]['conditional'] || {}
-          
-          for (let condName in elementConditional) {
-            // only find those field name depend on current changing field name          
-            if (condName === parentFieldName) {
-              const parentValue = getIn(result, `values.${parentFieldName}`)
-              let condValue = elementConditional[condName]
-              if (typeof condValue == 'function') {
-                condValue = condValue.call(null, result, parentValue)
-              }   
-              const isNewVisible = parentIsVisible && deepEqual(condValue, parentValue)
-              result = setIn(result, `conditions.${elementName}.visible`, isNewVisible )
-              // find it's child and also set invisible
-              setVisible(conditions, elementName, isNewVisible)
-              break
-            }
-          }                   
-        }    
-      }      
-      setVisible(conditions, field, conditions[field].visible)
+      const conditionsResult = setVisible(conditions, field, conditions[field].visible, result)
+      result = merge(result, conditionsResult)
       return result
     },
     [FOCUS](state, { meta: { field } }) {
@@ -313,34 +318,12 @@ const createReducer = structure => {
         result = setIn(result, 'initial', values)
       }
 
-      const setVisible = (conditions, parentFieldName, parentIsVisible) => {
-        for (let elementName in conditions) { 
-          const elementConditional = conditions[elementName]['conditional'] || {}
-          
-          for (let condName in elementConditional) {
-            // only find those field name depend on current changing field name          
-            if (condName === parentFieldName) {
-              const parentValue = getIn(result, `values.${parentFieldName}`)
-              let condValue = elementConditional[condName]
-              if (typeof condValue == 'function') {
-                condValue = condValue.call(null, result, parentValue)
-              }   
-              const isNewVisible = parentIsVisible && deepEqual(condValue, parentValue)
-              result = setIn(result, `conditions.${elementName}.visible`, isNewVisible )
-              // find it's child and also set invisible
-              setVisible(conditions, elementName, isNewVisible)
-              break
-            }
-          }                   
-        }    
-      }       
-
       // initial all conditions
       const conditions = toJS(getIn(state, 'conditions'))
       for (let fieldName in conditions) {
         if (conditions[fieldName].conditional === undefined) {
           result = setIn(result, `conditions.${fieldName}`, getIn(state, `conditions.${fieldName}`))
-          setVisible(conditions, fieldName, true)
+          result = merge(result, setVisible(conditions, fieldName, true, result))
         }
       }
 
