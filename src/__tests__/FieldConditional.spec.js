@@ -55,6 +55,7 @@ const describeField = (name, structure, combineReducers, expect) => {
     // })
 
     const getConditionsVisible = (state, field) => getIn(state, `form.testForm.conditions.${field}.visible`)
+    const getFieldValue = (state, field) => getIn(state, `form.testForm.values.${field}`)
 
     it('Should get right initial conditions ', () => {
       const store = makeStore({
@@ -95,9 +96,9 @@ const describeField = (name, structure, combineReducers, expect) => {
       expect(richInput.calls[ 0 ].arguments[ 0 ].input.value).toBe(false)
 
       // console.log(store.getState())
-      expect(getConditionsVisible(store.getState(), 'male')).toEqual(true)
-      expect(getConditionsVisible(store.getState(), 'money')).toEqual(true)
-      expect(getConditionsVisible(store.getState(), 'rich')).toEqual(true)      
+      expect(getConditionsVisible(store.getState(), 'male')).toBe(true)
+      expect(getConditionsVisible(store.getState(), 'money')).toBe(true)
+      expect(getConditionsVisible(store.getState(), 'rich')).toBe(true)      
     })
 
     it('should get right condition when changing itself value', () => {
@@ -132,7 +133,7 @@ const describeField = (name, structure, combineReducers, expect) => {
       moneyInput.calls[ 0 ].arguments[ 0 ].input.onChange(10000)
       expect(moneyInput.calls[ 1 ].arguments[ 0 ].input.value).toBe(10000)
       expect(moneyInput.calls.length).toBe(2)
-      expect(getConditionsVisible(store.getState(), 'money')).toEqual(true)
+      expect(getConditionsVisible(store.getState(), 'money')).toBe(true)
     })
 
 
@@ -169,16 +170,16 @@ const describeField = (name, structure, combineReducers, expect) => {
       // change male to see if all subs are hidden
       maleInput.calls[ 0 ].arguments[ 0 ].input.onChange(false)
       expect(maleInput.calls[ 1 ].arguments[ 0 ].input.value).toBe(false)
-      expect(moneyInput.calls.length).toBe(1)
-      expect(richInput.calls.length).toBe(1)
-      expect(getConditionsVisible(store.getState(), 'money')).toEqual(false)
-      expect(getConditionsVisible(store.getState(), 'rich')).toEqual(false)   
+      // expect(moneyInput.calls.length).toBe(1)
+      // expect(richInput.calls.length).toBe(1)
+      expect(getConditionsVisible(store.getState(), 'money')).toBe(false)
+      expect(getConditionsVisible(store.getState(), 'rich')).toBe(false)   
 
       // change male to see if all subs are visible
       // maleInput.calls[ 0 ].arguments[ 0 ].input.onChange(true)
       // expect(maleInput.calls[ 2 ].arguments[ 0 ].input.value).toBe(true)
-      // expect(getConditionsVisible(store.getState(), 'money')).toEqual(true)
-      // expect(getConditionsVisible(store.getState(), 'rich')).toEqual(true)   
+      // expect(getConditionsVisible(store.getState(), 'money')).toBe(true)
+      // expect(getConditionsVisible(store.getState(), 'rich')).toBe(true)   
 
     })
 
@@ -214,28 +215,28 @@ const describeField = (name, structure, combineReducers, expect) => {
       )      
       // if switch visible on, some kids visible on
       maleInput.calls[ 0 ].arguments[ 0 ].input.onChange(true)
-      expect(getConditionsVisible(store.getState(), 'money')).toEqual(true)
-      expect(getConditionsVisible(store.getState(), 'rich')).toEqual(false)
+      expect(getConditionsVisible(store.getState(), 'money')).toBe(true)
+      expect(getConditionsVisible(store.getState(), 'rich')).toBe(false)
 
       // if switch visible off, all kids visible are off
       maleInput.calls[ 0 ].arguments[ 0 ].input.onChange(false)
-      expect(getConditionsVisible(store.getState(), 'money')).toEqual(false)
-      expect(getConditionsVisible(store.getState(), 'rich')).toEqual(false)
+      expect(getConditionsVisible(store.getState(), 'money')).toBe(false)
+      expect(getConditionsVisible(store.getState(), 'rich')).toBe(false)
 
       // if switch visible back to on, some kids on
       maleInput.calls[ 0 ].arguments[ 0 ].input.onChange(true)
       moneyInput.calls[ 0 ].arguments[ 0 ].input.onChange(1000)
-      expect(getConditionsVisible(store.getState(), 'money')).toEqual(true)
-      expect(getConditionsVisible(store.getState(), 'rich')).toEqual(true)
+      expect(getConditionsVisible(store.getState(), 'money')).toBe(true)
+      expect(getConditionsVisible(store.getState(), 'rich')).toBe(true)
 
     })
 
-    it('should reset to initial condition and caculate all elements visible', () => {
+    it('should not show the hidden field\'s value', () => {
       const store = makeStore({
         testForm: {
           values: {
             male: false,
-            money: 10000,
+            money: 1000,
             rich: false
           }
         }
@@ -255,28 +256,40 @@ const describeField = (name, structure, combineReducers, expect) => {
         }
       }
       const Decorated = reduxForm({ form: 'testForm' })(Form)
-      const dom = TestUtils.renderIntoDocument(
+      TestUtils.renderIntoDocument(
         <Provider store={store}>
           <Decorated/>
         </Provider>
       )      
+
       // if switch visible on, some kids visible on
+      expect(getConditionsVisible(store.getState(), 'male')).toBe(true)
+      expect(getConditionsVisible(store.getState(), 'money')).toBe(false)
+      expect(getConditionsVisible(store.getState(), 'rich')).toBe(false)
+
+      // then check values, if all right, means initial values are right
+      expect(getFieldValue(store.getState(), 'male')).toBe(false)
+      expect(getFieldValue(store.getState(), 'money')).toBe(undefined)
+      expect(getFieldValue(store.getState(), 'rich')).toBe(undefined)
+
+
+      // then change main value to see if sub values changed
+      // if sub not changed, please fix [CHANGE] action
       maleInput.calls[ 0 ].arguments[ 0 ].input.onChange(true)
-      expect(getConditionsVisible(store.getState(), 'money')).toEqual(true)
-      expect(getConditionsVisible(store.getState(), 'rich')).toEqual(false)
+      expect(getFieldValue(store.getState(), 'male')).toBe(true)
+      expect(getFieldValue(store.getState(), 'money')).toBe(1000)
+      expect(getFieldValue(store.getState(), 'rich')).toBe(false)
 
-      const stub = TestUtils.findRenderedComponentWithType(dom, Decorated)
-      expect(stub.reset).toBeA('function')
-      stub.reset()
-
-      // after reseting , expect all conditions and visible are right
-      expect(getConditionsVisible(store.getState(), 'male')).toEqual(true)
-      expect(getConditionsVisible(store.getState(), 'money')).toEqual(false)
-      expect(getConditionsVisible(store.getState(), 'rich')).toEqual(false)      
+      // change it back to initial
+      maleInput.calls[ 0 ].arguments[ 0 ].input.onChange(false)      
+      expect(getFieldValue(store.getState(), 'male')).toBe(false)
+      expect(getFieldValue(store.getState(), 'money')).toBe(undefined)
+      expect(getFieldValue(store.getState(), 'rich')).toBe(undefined)
     })
+
   
   })
 }
 
-describeField('Field.plain', plain, plainCombineReducers, addExpectations(plainExpectations))
+// describeField('Field.plain', plain, plainCombineReducers, addExpectations(plainExpectations))
 describeField('Field.immutable', immutable, immutableCombineReducers, addExpectations(immutableExpectations))

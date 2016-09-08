@@ -41,7 +41,6 @@ const createReducer = structure => {
     setIn,
     deleteIn,
     fromJS,
-    merge,
     toJS,
     size,
     some,
@@ -62,6 +61,52 @@ const createReducer = structure => {
     result = doSplice(result, 'fields', field, index, removeNum, nonValuesValue)
     result = doSplice(result, 'submitErrors', field, index, removeNum, nonValuesValue)
     result = doSplice(result, 'asyncErrors', field, index, removeNum, nonValuesValue)
+    return result
+  }
+
+  const registerConditional = (state, name, conditional, cachedValue) => {
+    let result = state
+    // conditional set and get attribute visible 
+    const getElementValue = (name) => {
+      const formState = state
+      const initial = getIn(formState, `initial.${name}`)
+      const value = getIn(formState, `values.${name}`)
+      return value || initial
+    } 
+
+    let isVisible = true               
+    if (conditional) {
+      for ( let depName in conditional) {      
+        const depOnObjVisible = getIn(state, `conditions.${depName}.visible`)
+        if (depOnObjVisible) {
+          const depValue = conditional[depName]
+          const conditionalObjValue = getElementValue(depName)
+
+          if (typeof depValue == 'function') {
+            isVisible = isVisible && depValue.call(null, result, conditionalObjValue)
+          } else {
+            isVisible = isVisible && depValue === conditionalObjValue
+          }
+        } else {
+          isVisible = false
+          break
+        }
+      }
+
+    }      
+
+    const registeredCondition = getIn(result, `conditions.${name}.conditional`)
+    if (conditional !== undefined && deepEqual(registeredCondition, conditional)) {
+      return state
+    }
+
+    const mapData = fromJS({ conditional, visible: isVisible, cachedValue: cachedValue })
+    result = setIn(result, `conditions.${name}`, mapData)
+
+    if (!isVisible) {
+      result = deleteInWithCleanUp(result, `values.${name}`)
+    } 
+
     return result
   }
 
@@ -158,6 +203,7 @@ const createReducer = structure => {
       } else if (payload !== undefined) {
         result = setIn(result, `values.${field}`, payload)
       }
+      result = setIn(result, `conditions.${field}.cachedValue`, payload)
       result = deleteInWithCleanUp(result, `asyncErrors.${field}`)
       result = deleteInWithCleanUp(result, `submitErrors.${field}`)
       result = deleteInWithCleanUp(result, `fields.${field}.autofilled`)
@@ -166,6 +212,7 @@ const createReducer = structure => {
         result = setIn(result, `fields.${field}.touched`, true)
         result = setIn(result, 'anyTouched', true)
       }
+      // console.log(result)
 
       // Search all conditional which depends on this field and update visible
       const conditions = clone(toJS(getIn(result, 'conditions')))
@@ -183,6 +230,15 @@ const createReducer = structure => {
               }   
               const isNewVisible = parentIsVisible && deepEqual(condValue, parentValue)
               result = setIn(result, `conditions.${elementName}.visible`, isNewVisible )
+
+              // const elementValue = getIn(result, `values.${elementName}`) || getIn(result, `initial.${elementName}`)
+              if (!isNewVisible) {             
+                result = deleteInWithCleanUp(result, `values.${elementName}`)
+              } else {
+                const cachedValue = getIn(result, `conditions.${elementName}.cachedValue`)
+                result = setIn(result, `values.${elementName}`, cachedValue)
+              }
+
               // find it's child and also set invisible
               setVisible(conditions, elementName, isNewVisible)
               break
@@ -191,6 +247,7 @@ const createReducer = structure => {
         }    
       }      
       setVisible(conditions, field, conditions[field].visible)
+
       return result
     },
     [FOCUS](state, { meta: { field } }) {
@@ -245,50 +302,8 @@ const createReducer = structure => {
       return result
     },
     [REGISTER_CONDITIONAL](state, { payload: { name, conditional } }) {
-      let result = state
-      // if (conditional === undefined) {
-      //   result = setIn(result, `conditions.${name}`)
-      //   return result
-      // }
-
-      // conditional set and get attribute visible 
-      const getElementValue = (name) => {
-        const formState = state
-        const initial = getIn(formState, `initial.${name}`)
-        const value = getIn(formState, `values.${name}`)
-        return value || initial
-      } 
-
-      let isVisible = true               
-      if (conditional) {
-        for ( let depName in conditional) {      
-          const depOnObjVisible = getIn(state, `conditions.${depName}.visible`)
-          if (depOnObjVisible) {
-            const depValue = conditional[depName]
-            const conditionalObjValue = getElementValue(depName)
-
-            if (typeof depValue == 'function') {
-              isVisible = isVisible && depValue.call(null, result, conditionalObjValue)
-            } else {
-              isVisible = isVisible && depValue === conditionalObjValue
-            }
-          } else {
-            isVisible = false
-            break
-          }
-        }
-
-      }      
-
-      const registeredCondition = getIn(result, `conditions.${name}.conditional`)
-      if (conditional !== undefined && deepEqual(registeredCondition, conditional)) {
-        return state
-      }
-
-      const mapData = fromJS({ conditional, visible: isVisible })
-      // console.log(mapData)
-      result = setIn(result, `conditions.${name}`, mapData)
-      return result
+      const initialValue = getIn(state, `values.${name}`)
+      return registerConditional(state, name, conditional, initialValue)
     },
     [REGISTER_FIELD](state, { payload: { name, type } }) {
       let result = state
@@ -313,34 +328,16 @@ const createReducer = structure => {
         result = setIn(result, 'initial', values)
       }
 
-      const setVisible = (conditions, parentFieldName, parentIsVisible) => {
-        for (let elementName in conditions) { 
-          const elementConditional = conditions[elementName]['conditional'] || {}
-          
-          for (let condName in elementConditional) {
-            // only find those field name depend on current changing field name          
-            if (condName === parentFieldName) {
-              const parentValue = getIn(result, `values.${parentFieldName}`)
-              let condValue = elementConditional[condName]
-              if (typeof condValue == 'function') {
-                condValue = condValue.call(null, result, parentValue)
-              }   
-              const isNewVisible = parentIsVisible && deepEqual(condValue, parentValue)
-              result = setIn(result, `conditions.${elementName}.visible`, isNewVisible )
-              // find it's child and also set invisible
-              setVisible(conditions, elementName, isNewVisible)
-              break
-            }
-          }                   
-        }    
-      }       
-
       // initial all conditions
       const conditions = toJS(getIn(state, 'conditions'))
       for (let fieldName in conditions) {
+        const initialValue = getIn(result, `values.${fieldName}`)
         if (conditions[fieldName].conditional === undefined) {
-          result = setIn(result, `conditions.${fieldName}`, getIn(state, `conditions.${fieldName}`))
-          setVisible(conditions, fieldName, true)
+          const mapData = fromJS({ conditional: getIn(state, `conditions.${fieldName}.conditional`), visible: true, cachedValue: initialValue })
+          result = setIn(result, `conditions.${fieldName}`, mapData)
+          // setVisible(conditions, fieldName, true)          
+        } else {
+          result = registerConditional(result, fieldName, conditions[fieldName].conditional, initialValue)
         }
       }
 

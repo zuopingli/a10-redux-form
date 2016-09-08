@@ -92,7 +92,7 @@ const createField = ({ deepEqual, getIn, setIn }) => {
 
     render() {
       const visible = getIn(this.context._reduxForm.conditions, `${this.name}.visible`)
-      console.log('rendering..................field', this.name, ' visible ', visible)
+      // console.log('rendering..................field', this.name, ' visible ', visible)
       return visible === undefined || visible ? createElement(this.ConnectedField, {
         ...this.props,
         normalize: this.normalize,

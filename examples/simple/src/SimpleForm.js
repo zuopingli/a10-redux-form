@@ -71,6 +71,6 @@ const SimpleForm = (props) => {
 export default reduxForm({
   form: 'simple',
   initialValues: {
-    'checkConditional': false
+    'checkConditional': true
   }
 })(SimpleForm)
