@@ -83,7 +83,7 @@ const createReducer = structure => {
           const conditionalObjValue = getElementValue(depName)
 
           if (typeof depValue == 'function') {
-            isVisible = isVisible && depValue.call(null, result, conditionalObjValue)
+            isVisible = isVisible && depValue.call(null, conditionalObjValue, result)
           } else {
             isVisible = isVisible && depValue === conditionalObjValue
           }
@@ -225,10 +225,12 @@ const createReducer = structure => {
             if (condName === parentFieldName) {
               const parentValue = getIn(result, `values.${parentFieldName}`)
               let condValue = elementConditional[condName]
+              let isNewVisible = parentIsVisible
               if (typeof condValue == 'function') {
-                condValue = condValue.call(null, result, parentValue)
-              }   
-              const isNewVisible = parentIsVisible && deepEqual(condValue, parentValue)
+                isNewVisible = isNewVisible && condValue.call(null, parentValue, result)
+              } else {
+                isNewVisible = isNewVisible && deepEqual(condValue, parentValue)
+              }
               result = setIn(result, `conditions.${elementName}.visible`, isNewVisible )
 
               // const elementValue = getIn(result, `values.${elementName}`) || getIn(result, `initial.${elementName}`)

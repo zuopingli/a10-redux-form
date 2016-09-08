@@ -287,6 +287,37 @@ const describeField = (name, structure, combineReducers, expect) => {
       expect(getFieldValue(store.getState(), 'rich')).toBe(undefined)
     })
 
+    it('should show right visible by expression', () => {
+      const store = makeStore({
+        testForm: {
+          values: {
+            money: 1000          
+          }
+        }
+      })
+      const moneyInput = createSpy(props => <input {...props.input}/>).andCallThrough()
+      const richInput = createSpy(props => <input {...props.input}/>).andCallThrough()
+      class Form extends Component {
+        render() {
+          return (
+            <div>
+              <Field name="money" component={moneyInput} />
+              <Field name="rich" component={richInput} conditional={{ money: value => value > 1000 }}/>
+            </div>
+          )
+        }
+      }
+      const Decorated = reduxForm({ form: 'testForm' })(Form)
+      TestUtils.renderIntoDocument(
+        <Provider store={store}>
+          <Decorated/>
+        </Provider>
+      )      
+
+      // if switch visible on, some kids visible on
+      expect(getConditionsVisible(store.getState(), 'rich')).toBe(false)
+    })
+
   
   })
 }
