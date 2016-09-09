@@ -9,10 +9,10 @@ import createReduxForm from '../reduxForm'
 import createReducer from '../reducer'
 import createField from '../Field'
 import plain from '../structure/plain'
-import plainExpectations from '../structure/plain/expectations'
 import immutable from '../structure/immutable'
 import immutableExpectations from '../structure/immutable/expectations'
 import addExpectations from './addExpectations'
+import { formatCondName } from '../util/formatConditionalName'
 
 const describeField = (name, structure, combineReducers, expect) => {
   const reduxForm = createReduxForm(structure)
@@ -21,28 +21,6 @@ const describeField = (name, structure, combineReducers, expect) => {
   const { fromJS, getIn } = structure
   const makeStore = (initial) => createStore(
     combineReducers({ form: reducer }), fromJS({ form: initial }))
-
-  class TestInput extends Component {
-    render() {
-      return <div>TEST INPUT</div>
-    }
-  }
-
-  const testProps = (state, config = {}) => {
-    const store = makeStore({ testForm: state })
-    class Form extends Component {
-      render() {
-        return <div><Field name="foo" component={TestInput}/></div>
-      }
-    }
-    const TestForm = reduxForm({ form: 'testForm', ...config })(Form)
-    const dom = TestUtils.renderIntoDocument(
-      <Provider store={store}>
-        <TestForm/>
-      </Provider>
-    )
-    return TestUtils.findRenderedComponentWithType(dom, TestInput).props
-  }
 
   describe(name, () => {
     // it('should throw an error if not in ReduxForm', () => {
@@ -54,8 +32,8 @@ const describeField = (name, structure, combineReducers, expect) => {
     //   }).toThrow(/must be inside a component decorated with reduxForm/)
     // })
 
-    const getConditionsVisible = (state, field) => getIn(state, `form.testForm.conditions.${field}.visible`)
-    const getFieldValue = (state, field) => getIn(state, `form.testForm.values.${field}`)
+    const getConditionsVisible = (state, field) => getIn(state, `form.testForm.conditions.${formatCondName(field)}.visible`)
+    const getFieldValue = (state, field) => getIn(state, `form.testForm.values.${formatCondName(field)}`)
 
     it('Should get right initial conditions ', () => {
       const store = makeStore({
@@ -171,7 +149,7 @@ const describeField = (name, structure, combineReducers, expect) => {
       maleInput.calls[ 0 ].arguments[ 0 ].input.onChange(false)
       expect(maleInput.calls[ 1 ].arguments[ 0 ].input.value).toBe(false)
       // expect(moneyInput.calls.length).toBe(1)
-      // expect(richInput.calls.length).toBe(1)
+      // expect(richInput.calls.length).toBe(1) 
       expect(getConditionsVisible(store.getState(), 'money')).toBe(false)
       expect(getConditionsVisible(store.getState(), 'rich')).toBe(false)   
 
@@ -261,6 +239,7 @@ const describeField = (name, structure, combineReducers, expect) => {
           <Decorated/>
         </Provider>
       )      
+      // console.log('check show value.....................................................')
 
       // if switch visible on, some kids visible on
       expect(getConditionsVisible(store.getState(), 'male')).toBe(true)
@@ -313,9 +292,64 @@ const describeField = (name, structure, combineReducers, expect) => {
           <Decorated/>
         </Provider>
       )      
+      // console.log('check expression.....................................................')
 
       // if switch visible on, some kids visible on
       expect(getConditionsVisible(store.getState(), 'rich')).toBe(false)
+    })
+
+    it('should support dot splitted name', () => {
+      const store = makeStore({
+        testForm: {
+          values: {
+            global: {
+              'china': { 
+                'male': true,
+                'money': 1000,
+                'rich': false
+              }
+            }
+          }
+        }
+      })
+      const maleInput = createSpy(props => <input {...props.input}/>).andCallThrough()
+      const moneyInput = createSpy(props => <input {...props.input}/>).andCallThrough()
+      const richInput = createSpy(props => <input {...props.input}/>).andCallThrough()
+      class Form extends Component {
+        render() {
+          return (
+            <div>
+              <Field name="global.china.male" component={maleInput} type="text"/>
+              <Field name="global.china.money" component={moneyInput} conditional={{ 'global.china.male': true }}/>
+              <Field name="global.china.rich" component={richInput} conditional={{ 'global.china.money': 1000 }}/>
+            </div>
+          )
+        }
+      }
+      const TestForm = reduxForm({ form: 'testForm' })(Form)
+      TestUtils.renderIntoDocument(
+        <Provider store={store}>
+          <TestForm/>
+        </Provider>
+      )      
+
+      // console.log('check dot.....................................................')
+      // if switch visible on, some kids visible on
+      expect(getConditionsVisible(store.getState(), 'global.china.male')).toBe(true)
+      expect(getConditionsVisible(store.getState(), 'global.china.money')).toBe(true)
+      expect(getConditionsVisible(store.getState(), 'global.china.rich')).toBe(true)
+
+      // if switch visible off, all kids visible are off
+      maleInput.calls[ 0 ].arguments[ 0 ].input.onChange(false)
+      expect(getConditionsVisible(store.getState(), 'global.china.money')).toBe(false)
+      expect(getConditionsVisible(store.getState(), 'global.china.rich')).toBe(false)
+
+      // if switch visible back to on, some kids on
+      maleInput.calls[ 0 ].arguments[ 0 ].input.onChange(true)
+      moneyInput.calls[ 0 ].arguments[ 0 ].input.onChange(1000)
+      expect(getConditionsVisible(store.getState(), 'global.china.money')).toBe(true)
+      expect(getConditionsVisible(store.getState(), 'global.china.rich')).toBe(true)
+
     })
 
   

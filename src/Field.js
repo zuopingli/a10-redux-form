@@ -2,6 +2,7 @@ import { Component, PropTypes, createElement } from 'react'
 import invariant from 'invariant'
 import createConnectedField from './ConnectedField'
 import shallowCompare from './util/shallowCompare'
+import { formatCondName } from './util/formatConditionalName'
 
 
 const createField = ({ deepEqual, getIn, setIn }) => {
@@ -91,8 +92,7 @@ const createField = ({ deepEqual, getIn, setIn }) => {
     }
 
     render() {
-      const visible = getIn(this.context._reduxForm.conditions, `${this.name}.visible`)
-      // console.log('rendering..................field', this.name, ' visible ', visible)
+      const visible = getIn(this.context._reduxForm.conditions, `${formatCondName(this.name)}.visible`)
       return visible === undefined || visible ? createElement(this.ConnectedField, {
         ...this.props,
         normalize: this.normalize,

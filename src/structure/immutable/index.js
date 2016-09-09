@@ -12,6 +12,7 @@ const structure = {
   setIn: (state, field, value) => state.setIn(toPath(field), value),
   deepEqual,
   deleteIn: (state, field) => state.deleteIn(toPath(field)),
+  forIn: (state, callback) => state.forEach(callback),
   fromJS: jsValue => fromJS(jsValue, (key, value) =>
     Iterable.isIndexed(value) ? value.toList() : value.toMap()),
   merge: (object1, object2) => object1.mergeDeep(object2),

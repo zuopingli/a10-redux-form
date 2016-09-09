@@ -3,7 +3,7 @@ import getIn from './getIn'
 import setIn from './setIn'
 import deepEqual from './deepEqual'
 import deleteIn from './deleteIn'
-import { some, merge } from 'lodash'
+import { some, merge, forIn } from 'lodash'
 
 const structure = {
   empty: {},
@@ -12,6 +12,7 @@ const structure = {
   setIn,
   deepEqual,
   deleteIn,
+  forIn,
   fromJS: value => value,
   merge, 
   toJS: value => value, 
