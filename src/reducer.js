@@ -17,6 +17,7 @@ import {
   INITIALIZE,
   REGISTER_CONDITIONAL,
   REGISTER_FIELD,
+  REGISTER_VALIDATION,
   RESET,
   SET_SUBMIT_FAILED,
   SET_SUBMIT_SUCCEEDED,
@@ -32,6 +33,7 @@ import {
 import 'array-findindex-polyfill'
 import createDeleteInWithCleanUp from './deleteInWithCleanUp'
 import { formatCondName, unformatCondName } from './util/formatConditionalName'
+import * as validators from './validators'
 
 const createReducer = structure => {
   const {
@@ -133,6 +135,25 @@ const createReducer = structure => {
 
     return result
   }
+
+  // validate changed value
+  const validate = (name, value, validations) => {
+    let syncErrors = fromJS({})
+    // use field validations
+    forIn(validations, (val) => {
+      if (!getIn(syncErrors, name)) {
+        const func = getIn(val, 'func')
+        const msg = getIn(val, 'msg')
+        const retMsg = func(value)
+        const finalMsg = retMsg && msg ? msg : retMsg
+        if (finalMsg) {
+          syncErrors = setIn(syncErrors, name, finalMsg)
+        }
+      }
+    })
+
+    return toJS(syncErrors)
+  }  
 
   const behaviors = {
     [ARRAY_INSERT](state, { meta: { field, index }, payload }) {
@@ -237,7 +258,12 @@ const createReducer = structure => {
         result = setIn(result, `fields.${field}.touched`, true)
         result = setIn(result, 'anyTouched', true)
       }
-      // console.log(result)
+
+      // register syncErrors if exists
+      const syncErrors = validate(field, payload, getIn(result, `validations.${formatedName}`))
+      if (syncErrors) {        
+        result = setIn(result, 'syncErrors', syncErrors)
+      }
 
       // Search all conditional which depends on this field and update visible
       const conditions = getIn(result, 'conditions')
@@ -296,6 +322,10 @@ const createReducer = structure => {
       if (registeredConditions) {
         result = setIn(result, 'conditions', registeredConditions)
       }
+      const registeredValidations = getIn(state, 'validations')
+      if (registeredValidations) {
+        result = setIn(result, 'validations', registeredValidations)
+      }
       let newValues = mapData
       if (keepDirty && registeredFields) {
         //
@@ -342,6 +372,45 @@ const createReducer = structure => {
       result = setIn(state, 'registeredFields', splice(registeredFields, size(registeredFields), 0, mapData))
       return result
     },    
+    [REGISTER_VALIDATION](state, { payload: { name, validation } }) {
+      let result = state
+      let validator = []
+      // validations format
+      if (validation && typeof validation === 'object') {
+        forIn(validation, (v) => {
+          let funcStr = '', func = null
+          if (typeof v === 'string') {
+            funcStr = v
+          } else {
+            funcStr = v.func
+          }
+
+          if (funcStr) {
+            if (typeof funcStr === 'string') {
+              if (validators[funcStr]) {
+                func = validators[funcStr]
+              } else {
+                func = validators['foo']
+              }
+            } else {
+              func = funcStr
+            }
+          } else {
+            func = validators['foo']
+          }
+
+          validator.push({ func: func, msg: v.msg })
+        })        
+      } 
+
+      const formatedName = formatCondName(name)
+      if (validation) {
+        result = setIn(result, `validations.${formatedName}`, fromJS(validator))
+      } else {
+        result = deleteInWithCleanUp(result, `validations.${formatedName}`)
+      }
+      return result
+    },
     [RESET](state) {      
       let result = empty
       const registeredFields = getIn(state, 'registeredFields')

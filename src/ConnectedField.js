@@ -52,6 +52,7 @@ const createConnectedField = ({
         },
         asyncValidate
       )
+
       if (withRef) {
         props.ref = 'renderedComponent'
       }

@@ -2,7 +2,7 @@ import { Component, PropTypes, createElement } from 'react'
 import hoistStatics from 'hoist-non-react-statics'
 import { connect } from 'react-redux'
 import { bindActionCreators } from 'redux'
-import { mapValues } from 'lodash'
+import { mapValues, merge } from 'lodash'
 import isPromise from 'is-promise'
 import getDisplayName from './util/getDisplayName'
 import * as importedActions from './actions'
@@ -13,6 +13,7 @@ import asyncValidation from './asyncValidation'
 import defaultShouldAsyncValidate from './defaultShouldAsyncValidate'
 import plain from './structure/plain'
 import createIsValid from './selectors/isValid'
+import { unformatCondName } from './util/formatConditionalName'
 
 const isClassComponent = Component => Boolean(
   Component &&
@@ -59,7 +60,9 @@ const propsToNotUpdateFor = [
   'initialValues',
   'syncErrors',
   'values',
-  'registeredFields'
+  'registeredFields',
+  'conditions', 
+  'validations'
 ]
 
 const checkSubmit = submit => {
@@ -74,7 +77,7 @@ const checkSubmit = submit => {
  */
 const createReduxForm =
   structure => {
-    const { deepEqual, empty, getIn, setIn, fromJS } = structure
+    const { deepEqual, empty, fromJS, forIn, getIn, setIn, toJS } = structure
     const isValid = createIsValid(structure)
     return initialConfig => {
       const config = {
@@ -136,16 +139,48 @@ const createReduxForm =
           }
 
           validateIfNeeded(nextProps) {
-            const { validate, values } = this.props
-            if (validate) {
-              if (nextProps) {
-                // not initial render
-                if (!deepEqual(values, nextProps.values)) {
-                  const { _error, ...nextSyncErrors } = validate(nextProps.values, nextProps)
+            const { validate, values, validations } = this.props
+            const buildValidate = (values) => {
+              const valids = fromJS(validations)
+              let syncErrors = fromJS({})
+              // use field validations
+              forIn(valids, (vals, field) => {
+                forIn(vals, (val) => {
+                  const fieldName = unformatCondName(field)                  
+                  if (!getIn(syncErrors, fieldName)) {
+                    const func = getIn(val, 'func')
+                    const msg = getIn(val, 'msg')
+                    const value = getIn(values, fieldName)   
+                    const retMsg = func(value)
+                    const finalMsg = retMsg && msg ? msg : retMsg
+                    if (finalMsg) {
+                      syncErrors = setIn(syncErrors, fieldName, finalMsg)
+                    }
+                  }
+                })              
+              })
+              return toJS(syncErrors)
+            }
+
+            // use settings            
+            if (nextProps) {
+              // not initial render
+              // console.log('To updating ...............................')
+              if (!deepEqual(values, nextProps.values)) {
+                let nextSyncErrors = {}, _error = false
+                if (validate) {
+                  nextSyncErrors = validate(nextProps.values, nextProps)
                   this.updateSyncErrorsIfNeeded(nextSyncErrors, _error)
                 }
-              } else {
-                // initial render
+                // console.log('update validations ................')
+                const _nextSyncErrors = buildValidate(nextProps.values)
+                let finalSyncErrors = merge(_nextSyncErrors, nextSyncErrors)
+                // console.log(finalSyncErrors)
+                this.updateSyncErrorsIfNeeded(finalSyncErrors)
+              }
+            } else {
+              // initial render
+              if (validate) {                
                 const { _error, ...nextSyncErrors } = validate(values, this.props)
                 this.updateSyncErrorsIfNeeded(nextSyncErrors, _error)
               }
@@ -154,11 +189,13 @@ const createReduxForm =
 
           componentWillMount() {
             this.initIfNeeded()
+            // console.log('Mounting............')
             this.validateIfNeeded()
           }
 
           componentWillReceiveProps(nextProps) {
             this.initIfNeeded(nextProps)
+            // console.log('Receive Props............')
             this.validateIfNeeded(nextProps)
           }
 
@@ -167,7 +204,7 @@ const createReduxForm =
             return Object.keys(nextProps).some(prop => {
               // useful to debug rerenders
               // if (!plain.deepEqual(this.props[ prop ], nextProps[ prop ])) {
-              //   console.info(prop, 'changed', this.props[ prop ], '==>', nextProps[ prop ])
+              //   console.info('[[[[[[[[[[[' , prop, ' ]]]]]]]]]]]]]]]]]]]] changed', this.props[ prop ], '==>', nextProps[ prop ])
               // }
               return !~propsToNotUpdateFor.indexOf(prop) && !deepEqual(this.props[ prop ], nextProps[ prop ])
             })
@@ -323,6 +360,7 @@ const createReduxForm =
               registeredFields,
               registerField,
               registerConditional,
+              registerValidation,
               reset,
               setSubmitFailed,
               setSubmitSucceeded,
@@ -342,6 +380,7 @@ const createReduxForm =
               untouch,
               updateSyncErrors,
               valid,
+              validations,
               values,
               ...rest
             } = this.props            
@@ -370,7 +409,8 @@ const createReduxForm =
               submitSucceeded,
               touch,
               untouch,
-              valid
+              valid,
+              validations
             }
             const propsToPass = {
               ...(propNamespace ? { [propNamespace]: reduxFormProps } : reduxFormProps),
@@ -414,6 +454,7 @@ const createReduxForm =
             const registeredFields = getIn(formState, 'registeredFields') || []
             const conditions = getIn(formState, 'conditions') || {}
             const valid = isValid(form, getFormState)(state)
+            const validations = getIn(formState, 'validations') || {}
             const anyTouched = !!getIn(formState, 'anyTouched')
             const submitting = !!getIn(formState, 'submitting')
             const submitFailed = !!getIn(formState, 'submitFailed')
@@ -435,7 +476,8 @@ const createReduxForm =
               submitSucceeded,
               syncErrors,
               values,
-              valid
+              valid,
+              validations
             }
           },
           (dispatch, initialProps) => {

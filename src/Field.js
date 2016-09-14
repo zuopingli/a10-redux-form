@@ -18,7 +18,6 @@ const createField = ({ deepEqual, getIn, setIn }) => {
         getIn
       }, props.name)
       this.normalize = this.normalize.bind(this)
-      // console.log(context._reduxForm, 'console at Field')
     }
 
     shouldComponentUpdate(nextProps, nextState) {
@@ -28,6 +27,7 @@ const createField = ({ deepEqual, getIn, setIn }) => {
     componentWillMount() {
       this.context._reduxForm.register(this.name, 'Field')
       this.context._reduxForm.registerConditional(this.name, this.conditional)  
+      this.context._reduxForm.registerValidation(this.name, this.validation)  
     }
 
     componentWillReceiveProps(nextProps) {
@@ -45,6 +45,8 @@ const createField = ({ deepEqual, getIn, setIn }) => {
     componentWillUnmount() {
       // unregister conditional
       this.context._reduxForm.registerConditional(this.name)
+      // unregister validation
+      this.context._reduxForm.registerValidation(this.name)
       this.context._reduxForm.unregister(this.name)
     }
 
@@ -57,6 +59,10 @@ const createField = ({ deepEqual, getIn, setIn }) => {
 
     get conditional() {
       return this.props.conditional
+    }
+
+    get validation() {      
+      return this.props.validation
     }
 
     get name() {
