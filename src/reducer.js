@@ -251,6 +251,8 @@ const createReducer = structure => {
         result = setIn(result, `fields.${field}.touched`, true)
         result = setIn(result, 'anyTouched', true)
       }
+
+      result = validate(result, field)
       return result
     },
     [CHANGE](state, { meta: { field, touch }, payload }) {
@@ -308,7 +310,6 @@ const createReducer = structure => {
 
       setVisible(conditions, field, getIn(result, `conditions.${formatedName}.visible`))
 
-      result = validate(result, field)
       return result
     },
     [FOCUS](state, { meta: { field } }) {
