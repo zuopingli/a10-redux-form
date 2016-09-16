@@ -55,6 +55,8 @@ const createConnectedFields = ({
           },
           asyncValidate
         )
+
+        // console.log(rest, ' ========== Error!!')
         accumulator.custom = custom
         return plain.setIn(accumulator, name, fieldProps)
       }, {})

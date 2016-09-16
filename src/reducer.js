@@ -136,24 +136,37 @@ const createReducer = structure => {
     return result
   }
 
-  // validate changed value
-  const validate = (name, value, validations) => {
-    let syncErrors = fromJS({})
+  const validate = (result, field) => {
+    const formatedName = formatCondName(field)
+    const value = getIn(result, `values.${field}`)
+    const validations = getIn(result, `validations.${formatedName}`)
+    let syncErrors = fromJS(getIn(result, 'syncErrors') || {})
     // use field validations
-    forIn(validations, (val) => {
-      if (!getIn(syncErrors, name)) {
-        const func = getIn(val, 'func')
-        const msg = getIn(val, 'msg')
-        const retMsg = func(value)
-        const finalMsg = retMsg && msg ? msg : retMsg
-        if (finalMsg) {
-          syncErrors = setIn(syncErrors, name, finalMsg)
+    if (validations) {
+      syncErrors = deleteInWithCleanUp(syncErrors, field)
+      forIn(fromJS(validations), (val) => {
+        if (!getIn(syncErrors, field)) {
+          const func = getIn(val, 'func')
+          const msg = getIn(val, 'msg')
+          const retMsg = func(value)
+          const finalMsg = retMsg && msg ? msg : retMsg
+          if (finalMsg) {
+            syncErrors = setIn(syncErrors, field, finalMsg)
+          }
         }
-      }
-    })
+      })
+    }
 
-    return toJS(syncErrors)
-  }  
+    return setIn(result, 'syncErrors', toJS(syncErrors))
+  }
+
+  // const clearSyncError = (result, field) => {
+  //   const formatedName = formatCondName(field)
+  //   let syncErrors = fromJS(getIn(result, 'syncErrors'))
+  //   syncErrors = deleteInWithCleanUp(syncErrors, formatedName)
+  //   result = setIn(result, 'syncErrors', syncErrors)
+  //   return result
+  // }
 
   const behaviors = {
     [ARRAY_INSERT](state, { meta: { field, index }, payload }) {
@@ -259,11 +272,6 @@ const createReducer = structure => {
         result = setIn(result, 'anyTouched', true)
       }
 
-      // register syncErrors if exists
-      const syncErrors = validate(field, payload, getIn(result, `validations.${formatedName}`))
-      if (syncErrors) {        
-        result = setIn(result, 'syncErrors', syncErrors)
-      }
 
       // Search all conditional which depends on this field and update visible
       const conditions = getIn(result, 'conditions')
@@ -276,7 +284,6 @@ const createReducer = structure => {
           // console.log('.......... depend name', dependOn, '......parent name', parentFieldName)
           // only find those field name depend on current changing field name          
           if (dependOn === parentFieldName) {
-            // console.log('---------------------- compareing ----------------------------')
             const elementValue = getIn(result, `values.${parentFieldName}`)
             let isNewVisible = parentIsVisible
             if (typeof dependValue == 'function') {
@@ -285,9 +292,9 @@ const createReducer = structure => {
               isNewVisible = isNewVisible && deepEqual(dependValue, elementValue)
             }
             result = setIn(result, `conditions.${formatedElementName}.visible`, isNewVisible )
-            // console.log('......element ', elementName, ' .... visible ', isNewVisible, '....parentIsVisible ', parentIsVisible)
             if (!isNewVisible) {             
               result = deleteInWithCleanUp(result, `values.${elementName}`)
+              // result = clearSyncError(result, field)
             } else {
               const cachedValue = getIn(result, `conditions.${formatedElementName}.cachedValue`)
               result = setIn(result, `values.${elementName}`, cachedValue)
@@ -298,8 +305,10 @@ const createReducer = structure => {
           }
         })          
       }
+
       setVisible(conditions, field, getIn(result, `conditions.${formatedName}.visible`))
 
+      result = validate(result, field)
       return result
     },
     [FOCUS](state, { meta: { field } }) {
@@ -409,6 +418,8 @@ const createReducer = structure => {
       } else {
         result = deleteInWithCleanUp(result, `validations.${formatedName}`)
       }
+
+      result = validate(result, name)
       return result
     },
     [RESET](state) {      

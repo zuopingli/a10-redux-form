@@ -11,6 +11,7 @@ import createField from '../Field'
 import plain from '../structure/plain'
 import immutable from '../structure/immutable'
 import immutableExpectations from '../structure/immutable/expectations'
+import plainExpectations from '../structure/plain/expectations'
 import addExpectations from './addExpectations'
 // import { formatCondName } from '../util/formatConditionalName'
 import { ipv4 } from '../validators'
@@ -36,7 +37,7 @@ const describeField = (name, structure, combineReducers, expect) => {
               netmask: '/24',
               ipv6: '::123'
             }
-          }
+          }          
         }
       })
       const wildcardInput = createSpy(props => <input {...props.input}/>).andCallThrough()
@@ -57,12 +58,21 @@ const describeField = (name, structure, combineReducers, expect) => {
       }
       const TestForm = reduxForm({ 
         form: 'testForm'
+        // validate: () => {
+        //   console.log('test .................')
+        //   return {
+        //     'virtual-server': {
+        //       ipv4: 'IPv4'
+        //     }
+        //   }
+        // }
       })(Form)
       TestUtils.renderIntoDocument(
         <Provider store={store}>
           <TestForm/>
         </Provider>
       )
+      expect(ipv4Input.calls[ 0 ].arguments[ 0 ].meta.error).toBe('Must IPv4')     
 
       ipv4Input.calls[ 0 ].arguments[ 0 ].input.onChange('4.4.4.4.5')
       expect(ipv4Input.calls[ 1 ].arguments[ 0 ].meta.error).toBe('Must IPv4')  
@@ -71,16 +81,59 @@ const describeField = (name, structure, combineReducers, expect) => {
       expect(ipv4Input.calls[ 2 ].arguments[ 0 ].meta.error).toBe('Required')     
 
       ipv4Input.calls[ 2 ].arguments[ 0 ].input.onChange('1.2.3.4')
-      expect(ipv4Input.calls[ 3 ].arguments[ 0 ].meta.error).toNotExist()
+      // console.log(ipv4Input.calls[ 3 ].arguments[ 0 ].meta)
 
+      expect(ipv4Input.calls[ 3 ].arguments[ 0 ].meta.error).toNotExist()
 
   
     })
+
+    // it('Should support none validation case', () => {
+    //   const store = makeStore({
+    //     testForm: {
+    //       values: {
+    //         'virtual-server': {
+    //           wildcard: false,
+    //           ipv4: 'aaaa',
+    //           netmask: '/24',
+    //           ipv6: '::123'
+    //         }
+    //       }
+    //     }
+    //   })
+    //   const wildcardInput = createSpy(props => <input {...props.input}/>).andCallThrough()
+    //   const ipv4Input = createSpy(props => <input {...props.input}/>).andCallThrough()
+    //   const ipv6Input = createSpy(props => <input {...props.input}/>).andCallThrough()
+    //   const netmaskInput = createSpy(props => <input {...props.input}/>).andCallThrough()
+    //   class Form extends Component {
+    //     render() {
+    //       return (
+    //         <div>
+    //           <Field name="virtual-server.wildcard" component={wildcardInput}  />
+    //           <Field name="virtual-server.ipv4" component={ipv4Input} />
+    //           <Field name="virtual-server.ipv6" component={ipv6Input} />
+    //           <Field name="virtual-server.netmask" component={netmaskInput}  />
+    //         </div>
+    //       )
+    //     }
+    //   }
+    //   const TestForm = reduxForm({ 
+    //     form: 'testForm'
+    //   })(Form)
+    //   TestUtils.renderIntoDocument(
+    //     <Provider store={store}>
+    //       <TestForm/>
+    //     </Provider>
+    //   )
+
+    //   ipv4Input.calls[ 0 ].arguments[ 0 ].input.onChange('4.4.4.4')
+    //   expect(ipv4Input.calls[ 1 ].arguments[ 0 ].input.value).toBe('4.4.4.4')
+    // })
  
 
   
   })
 }
 
-// describeField('Field.plai, plain, plainCombineReducers, addExpectations(plainExpectations))
+// describeField('Field.plain', plain, plainCombineReducers, addExpectations(plainExpectations))
 describeField('Field.immutable', immutable, immutableCombineReducers, addExpectations(immutableExpectations))

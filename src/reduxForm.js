@@ -60,9 +60,7 @@ const propsToNotUpdateFor = [
   'initialValues',
   'syncErrors',
   'values',
-  'registeredFields',
-  'conditions', 
-  'validations'
+  'registeredFields'
 ]
 
 const checkSubmit = submit => {
@@ -77,7 +75,7 @@ const checkSubmit = submit => {
  */
 const createReduxForm =
   structure => {
-    const { deepEqual, empty, fromJS, forIn, getIn, setIn, toJS } = structure
+    const { deepEqual, empty, fromJS, getIn, setIn } = structure
     const isValid = createIsValid(structure)
     return initialConfig => {
       const config = {
@@ -139,49 +137,56 @@ const createReduxForm =
           }
 
           validateIfNeeded(nextProps) {
-            const { validate, values, validations } = this.props
-            const buildValidate = (values) => {
-              const valids = fromJS(validations)
-              let syncErrors = fromJS({})
-              // use field validations
-              forIn(valids, (vals, field) => {
-                forIn(vals, (val) => {
-                  const fieldName = unformatCondName(field)                  
-                  if (!getIn(syncErrors, fieldName)) {
-                    const func = getIn(val, 'func')
-                    const msg = getIn(val, 'msg')
-                    const value = getIn(values, fieldName)   
-                    const retMsg = func(value)
-                    const finalMsg = retMsg && msg ? msg : retMsg
-                    if (finalMsg) {
-                      syncErrors = setIn(syncErrors, fieldName, finalMsg)
-                    }
-                  }
-                })              
-              })
-              return toJS(syncErrors)
-            }
+            const { validate, values } = this.props
+
+            // const buildValidate = (values) => {
+            //   if (!nextProps) return {}
+            //   const { validations } = nextProps              
+            //   if ( validations ) {   
+            //     let syncErrors = fromJS({})       
+            //     const valids = fromJS(validations)              
+            //     // use field validations
+            //     forIn(valids, (vals, field) => {
+            //       forIn(vals, (val) => {
+            //         const fieldName = unformatCondName(field)                  
+            //         if (!getIn(syncErrors, fieldName)) {
+            //           const func = getIn(val, 'func')
+            //           const msg = getIn(val, 'msg')
+            //           const value = getIn(values, fieldName)   
+            //           const retMsg = func(value)
+            //           const finalMsg = retMsg && msg ? msg : retMsg
+            //           if (finalMsg) {
+            //             syncErrors = setIn(syncErrors, fieldName, finalMsg)
+            //           }
+            //         }
+            //       })              
+            //     })
+            //     return toJS(syncErrors)
+            //   }
+            // }
+
 
             // use settings            
             if (nextProps) {
               // not initial render
-              // console.log('To updating ...............................')
               if (!deepEqual(values, nextProps.values)) {
-                let nextSyncErrors = {}, _error = false
+                let nextSyncErrors = {}, _error = undefined
                 if (validate) {
                   nextSyncErrors = validate(nextProps.values, nextProps)
                   this.updateSyncErrorsIfNeeded(nextSyncErrors, _error)
+                  // console.log('validate', nextSyncErrors)
                 }
-                // console.log('update validations ................')
-                const _nextSyncErrors = buildValidate(nextProps.values)
-                let finalSyncErrors = merge(_nextSyncErrors, nextSyncErrors)
-                // console.log(finalSyncErrors)
-                this.updateSyncErrorsIfNeeded(finalSyncErrors)
+                // const _nextSyncErrors = buildValidate(nextProps.values)
+                // let finalSyncErrors = merge(_nextSyncErrors, nextSyncErrors)
+                // // console.log('field validate', _nextSyncErrors)
+
+                // this.updateSyncErrorsIfNeeded(finalSyncErrors, _error)
               }
             } else {
               // initial render
-              if (validate) {                
-                const { _error, ...nextSyncErrors } = validate(values, this.props)
+              let nextSyncErrors = {}, _error = undefined
+              if (validate) {
+                nextSyncErrors = validate(values, nextProps)
                 this.updateSyncErrorsIfNeeded(nextSyncErrors, _error)
               }
             }
@@ -189,13 +194,11 @@ const createReduxForm =
 
           componentWillMount() {
             this.initIfNeeded()
-            // console.log('Mounting............')
             this.validateIfNeeded()
           }
 
           componentWillReceiveProps(nextProps) {
             this.initIfNeeded(nextProps)
-            // console.log('Receive Props............')
             this.validateIfNeeded(nextProps)
           }
 
