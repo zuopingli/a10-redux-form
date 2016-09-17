@@ -1,12 +1,12 @@
 {
-  "name": "redux-form",
+  "name": "a10-redux-form",
   "version": "6.0.1",
   "description": "A higher order component decorator for forms using Redux and React",
   "main": "./lib/index.js",
   "jsnext:main": "./es/index.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/erikras/redux-form"
+    "url": "https://github.com/zuopingli/a10-redux-form"
   },
   "scripts": {
     "build": "npm run build:lib && npm run build:es && npm run build:umd && npm run build:umd:min",
@@ -36,9 +36,9 @@
   "author": "Erik Rasmussen <rasmussenerik@gmail.com> (http://github.com/erikras)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/erikras/redux-form/issues"
+    "url": "https://github.com/zuopingli/a10-redux-form/issues"
   },
-  "homepage": "https://redux-form.com/",
+  "homepage": "https://github.com/zuopingli/a10-redux-form",
   "dependencies": {
     "array-findindex-polyfill": "^0.1.0",
     "debug": "^2.2.0",
@@ -100,7 +100,7 @@
     "dist",
     "immutable.js"
   ],
-  "npmName": "redux-form",
+  "npmName": "a10-redux-form",
   "npmFileMap": [
     {
       "basePath": "/dist/",
