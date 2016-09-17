@@ -67,6 +67,40 @@ const createReducer = structure => {
     return result
   }
 
+  const validate = (result, field) => {
+    const formatedName = formatCondName(field)
+    const value = getIn(result, `values.${field}`)
+    console.log('field : ', field, 'value:', value)
+
+    const validations = getIn(result, `validations.${formatedName}`)
+    let syncErrors = fromJS(getIn(result, 'syncErrors') || {})
+    // use field validations
+    if (validations) {
+      syncErrors = deleteInWithCleanUp(syncErrors, field)
+      forIn(fromJS(validations), (val) => {
+        if (!getIn(syncErrors, field)) {
+          const func = getIn(val, 'func')
+          const msg = getIn(val, 'msg')
+          const retMsg = func(value)
+          const finalMsg = retMsg && msg ? msg : retMsg
+          if (finalMsg) {
+            syncErrors = setIn(syncErrors, field, finalMsg)
+          }
+        }
+      })
+    }
+
+    return setIn(result, 'syncErrors', toJS(syncErrors))
+  }
+
+  const clearSyncError = (result, field) => {
+    const formatedName = formatCondName(field)
+    let syncErrors = fromJS(getIn(result, 'syncErrors'))
+    syncErrors = deleteInWithCleanUp(syncErrors, formatedName)
+    result = setIn(result, 'syncErrors', syncErrors)
+    return result
+  }
+
   const registerConditional = (state, name, conditional, cachedValue) => {
     let result = state
     const fieldName = formatCondName(name)
@@ -74,9 +108,9 @@ const createReducer = structure => {
     // conditional set and get attribute visible 
     const getElementValue = (name) => {
       const formState = state
-      const initial = getIn(formState, `initial.${name}`)
+      // const initial = getIn(formState, `initial.${name}`)
       const value = getIn(formState, `values.${name}`)
-      return value || initial
+      return value
     } 
 
     // conditional format {key:value} or {dependOn: key, dependValue: value} or "key" only to treat
@@ -131,42 +165,13 @@ const createReducer = structure => {
 
     if (!isVisible) {
       result = deleteInWithCleanUp(result, `values.${name}`)
-    } 
+      result = clearSyncError(result, name)
+    } else {
+      result = validate(result, name)
+    }
 
     return result
   }
-
-  const validate = (result, field) => {
-    const formatedName = formatCondName(field)
-    const value = getIn(result, `values.${field}`)
-    const validations = getIn(result, `validations.${formatedName}`)
-    let syncErrors = fromJS(getIn(result, 'syncErrors') || {})
-    // use field validations
-    if (validations) {
-      syncErrors = deleteInWithCleanUp(syncErrors, field)
-      forIn(fromJS(validations), (val) => {
-        if (!getIn(syncErrors, field)) {
-          const func = getIn(val, 'func')
-          const msg = getIn(val, 'msg')
-          const retMsg = func(value)
-          const finalMsg = retMsg && msg ? msg : retMsg
-          if (finalMsg) {
-            syncErrors = setIn(syncErrors, field, finalMsg)
-          }
-        }
-      })
-    }
-
-    return setIn(result, 'syncErrors', toJS(syncErrors))
-  }
-
-  // const clearSyncError = (result, field) => {
-  //   const formatedName = formatCondName(field)
-  //   let syncErrors = fromJS(getIn(result, 'syncErrors'))
-  //   syncErrors = deleteInWithCleanUp(syncErrors, formatedName)
-  //   result = setIn(result, 'syncErrors', syncErrors)
-  //   return result
-  // }
 
   const behaviors = {
     [ARRAY_INSERT](state, { meta: { field, index }, payload }) {
@@ -296,10 +301,11 @@ const createReducer = structure => {
             result = setIn(result, `conditions.${formatedElementName}.visible`, isNewVisible )
             if (!isNewVisible) {             
               result = deleteInWithCleanUp(result, `values.${elementName}`)
-              // result = clearSyncError(result, field)
+              result = clearSyncError(result, elementName)
             } else {
               const cachedValue = getIn(result, `conditions.${formatedElementName}.cachedValue`)
               result = setIn(result, `values.${elementName}`, cachedValue)
+              result = validate(result, elementName)
             }
             // find it's child and also set invisible
             setVisible(conditions, elementName, isNewVisible)
@@ -309,6 +315,10 @@ const createReducer = structure => {
       }
 
       setVisible(conditions, field, getIn(result, `conditions.${formatedName}.visible`))
+<<<<<<< HEAD
+=======
+      result = validate(result, field)
+>>>>>>> development
 
       return result
     },
@@ -420,7 +430,7 @@ const createReducer = structure => {
         result = deleteInWithCleanUp(result, `validations.${formatedName}`)
       }
 
-      result = validate(result, name)
+      // result = validate(result, name)
       return result
     },
     [RESET](state) {      

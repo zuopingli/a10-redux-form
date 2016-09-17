@@ -26,8 +26,8 @@ const createField = ({ deepEqual, getIn, setIn }) => {
 
     componentWillMount() {
       this.context._reduxForm.register(this.name, 'Field')
-      this.context._reduxForm.registerConditional(this.name, this.conditional)  
       this.context._reduxForm.registerValidation(this.name, this.validation)  
+      this.context._reduxForm.registerConditional(this.name, this.conditional)  
     }
 
     componentWillReceiveProps(nextProps) {
@@ -43,10 +43,10 @@ const createField = ({ deepEqual, getIn, setIn }) => {
     }
 
     componentWillUnmount() {
-      // unregister conditional
-      this.context._reduxForm.registerConditional(this.name)
       // unregister validation
       this.context._reduxForm.registerValidation(this.name)
+      // unregister conditional
+      this.context._reduxForm.registerConditional(this.name)
       this.context._reduxForm.unregister(this.name)
     }
 

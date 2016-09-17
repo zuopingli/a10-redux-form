@@ -2,7 +2,7 @@ import { Component, PropTypes, createElement } from 'react'
 import hoistStatics from 'hoist-non-react-statics'
 import { connect } from 'react-redux'
 import { bindActionCreators } from 'redux'
-import { mapValues, merge } from 'lodash'
+import { mapValues } from 'lodash'
 import isPromise from 'is-promise'
 import getDisplayName from './util/getDisplayName'
 import * as importedActions from './actions'
@@ -13,7 +13,7 @@ import asyncValidation from './asyncValidation'
 import defaultShouldAsyncValidate from './defaultShouldAsyncValidate'
 import plain from './structure/plain'
 import createIsValid from './selectors/isValid'
-import { unformatCondName } from './util/formatConditionalName'
+// import { unformatCondName } from './util/formatConditionalName'
 
 const isClassComponent = Component => Boolean(
   Component &&
