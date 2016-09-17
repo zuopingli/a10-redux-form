@@ -70,7 +70,7 @@ const createReducer = structure => {
   const validate = (result, field) => {
     const formatedName = formatCondName(field)
     const value = getIn(result, `values.${field}`)
-    console.log('field : ', field, 'value:', value)
+    // console.log('field : ', field, 'value:', value)
 
     const validations = getIn(result, `validations.${formatedName}`)
     let syncErrors = fromJS(getIn(result, 'syncErrors') || {})
@@ -94,9 +94,11 @@ const createReducer = structure => {
   }
 
   const clearSyncError = (result, field) => {
-    const formatedName = formatCondName(field)
     let syncErrors = fromJS(getIn(result, 'syncErrors'))
-    syncErrors = deleteInWithCleanUp(syncErrors, formatedName)
+    // console.log('before delete.....................',field,  syncErrors)
+    syncErrors = deleteInWithCleanUp(syncErrors, field)
+    // console.log('after delete.....................', syncErrors)
+
     result = setIn(result, 'syncErrors', syncErrors)
     return result
   }
@@ -315,10 +317,7 @@ const createReducer = structure => {
       }
 
       setVisible(conditions, field, getIn(result, `conditions.${formatedName}.visible`))
-<<<<<<< HEAD
-=======
       result = validate(result, field)
->>>>>>> development
 
       return result
     },

@@ -199,7 +199,7 @@ const describeField = (name, structure, combineReducers, expect) => {
               'is-ipv4': true,
               ipv4: '44..2',
               netmask: '/24',
-              ipv6: '::123'
+              ipv6: 'kdkdkk'
             }
           }
         }
@@ -255,6 +255,17 @@ const describeField = (name, structure, combineReducers, expect) => {
       expect(getIn(store.getState(), 'form.testForm.syncErrors')).toEqual({
         'virtual-server': {
           ipv4: 'Must IPv4'
+        }
+      })
+
+      isIpv4Input.calls[0].arguments[0].input.onChange(false)
+      expect(getConditionsVisible(store.getState(), 'virtual-server.ipv4')).toBe(false)
+      expect(getConditionsVisible(store.getState(), 'virtual-server.ipv6')).toBe(true)
+      expect(getConditionsVisible(store.getState(), 'virtual-server.netmask')).toBe(false)
+      // expect errors to have error
+      expect(getIn(store.getState(), 'form.testForm.syncErrors')).toEqual({
+        'virtual-server': {
+          ipv6: 'IPv6 Address Invalid'
         }
       })
 
