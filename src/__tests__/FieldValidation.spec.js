@@ -213,7 +213,7 @@ const describeField = (name, structure, combineReducers, expect) => {
         render() {
           const { handleSubmit } = this.props
           return (
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit((values)=>{console.log(values)})}>
               <Field name="virtual-server.wildcard" component={wildcardInput} />
               <Field name="virtual-server.is-ipv4" component={isIpv4Input} conditional={{ 'virtual-server.wildcard': false }} />
               <Field name="virtual-server.ipv4" component={ipv4Input} conditional={{ 'virtual-server.is-ipv4': true }} validation={[ { func: 'required', msg: 'Required' }, { func: ipv4, msg: 'Must IPv4' } ] } />
@@ -243,6 +243,7 @@ const describeField = (name, structure, combineReducers, expect) => {
       // expect errors to have no error
       expect(toJS(getIn(store.getState(), 'form.testForm.syncErrors'))).toEqual({})
 
+      // console.log('Changing wildcard value to false...................****************************')
       // IPv4 not right, so when submitting, need show error
       wildcardInput.calls[0].arguments[0].input.onChange(false)
       expect(getConditionsVisible(store.getState(), 'virtual-server.wildcard')).toBe(true)
@@ -258,6 +259,7 @@ const describeField = (name, structure, combineReducers, expect) => {
         }
       })
 
+      // console.log('Changing isIpv4Input value to false...................****************************')
       isIpv4Input.calls[0].arguments[0].input.onChange(false)
       expect(getConditionsVisible(store.getState(), 'virtual-server.ipv4')).toBe(false)
       expect(getConditionsVisible(store.getState(), 'virtual-server.ipv6')).toBe(true)
@@ -271,15 +273,43 @@ const describeField = (name, structure, combineReducers, expect) => {
 
       //stimulate submit      
       const form = TestUtils.findRenderedDOMComponentWithTag(dom, 'form')
-      // TestUtils.Simulate.submit(form)
+      TestUtils.Simulate.submit(form)
       const stub = TestUtils.findRenderedComponentWithType(dom, TestForm)
       // invalid because no value for 'bar' field
       expect(stub.dirty).toBe(true)
       expect(stub.pristine).toBe(false)
       expect(stub.valid).toBe(false)
       expect(stub.invalid).toBe(true)
+      // console.log(getIn(store.getState(), 'form.testForm.syncErrors'))
 
-      
+
+      // console.log('Changing wildcardInput value to true...................****************************')
+      // turn off the wildcard and to see if virtual-server fields visible are right
+      wildcardInput.calls[1].arguments[0].input.onChange(true)
+      expect(getConditionsVisible(store.getState(), 'virtual-server.is-ipv4')).toBe(false)
+      expect(getConditionsVisible(store.getState(), 'virtual-server.ipv4')).toBe(false)
+      expect(getConditionsVisible(store.getState(), 'virtual-server.ipv6')).toBe(false)
+      expect(getConditionsVisible(store.getState(), 'virtual-server.netmask')).toBe(false)
+      // expect errors to have no error
+      expect(toJS(getIn(store.getState(), 'form.testForm.syncErrors'))).toEqual({})
+
+      // console.log('Changing wildcardInput value to false...................****************************')
+      // IPv4 not right, so when submitting, need show error
+      wildcardInput.calls[2].arguments[0].input.onChange(false)
+      // console.log(getIn(store.getState(), 'form.testForm.conditions'))
+      expect(getConditionsVisible(store.getState(), 'virtual-server.wildcard')).toBe(true)
+      expect(getConditionsVisible(store.getState(), 'virtual-server.is-ipv4')).toBe(true)
+      expect(getConditionsVisible(store.getState(), 'virtual-server.ipv4')).toBe(false)
+      expect(getConditionsVisible(store.getState(), 'virtual-server.ipv6')).toBe(true)
+      expect(getConditionsVisible(store.getState(), 'virtual-server.netmask')).toBe(false)
+
+      // expect errors to have error
+      expect(getIn(store.getState(), 'form.testForm.syncErrors')).toEqual({
+        'virtual-server': {
+          ipv6: 'IPv6 Address Invalid'
+        }
+      })
+
     })
  
   })

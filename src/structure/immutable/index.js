@@ -15,8 +15,8 @@ const structure = {
   forIn: (state, callback) => state.forEach(callback),
   fromJS: jsValue => fromJS(jsValue, (key, value) =>
     Iterable.isIndexed(value) ? value.toList() : value.toMap()),
-  merge: (object1, object2) => object1.mergeDeep(object2),
-  toJS: jsValue => jsValue ? jsValue.toJS() : jsValue,
+  merge: (object1, object2) => Iterable.isIndexed(object1) ? object1.mergeDeep(object2) : object2,
+  toJS: jsValue => Iterable.isIterable(jsValue) && jsValue ? jsValue.toJS() : jsValue,
   size: list => list ? list.size : 0,
   some: (iterable, callback) => Iterable.isIterable(iterable) ? iterable.some(callback) : false,
   splice

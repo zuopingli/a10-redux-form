@@ -165,7 +165,6 @@ const createReduxForm =
             //   }
             // }
 
-
             // use settings            
             if (nextProps) {
               // not initial render
@@ -174,11 +173,9 @@ const createReduxForm =
                 if (validate) {
                   nextSyncErrors = validate(nextProps.values, nextProps)
                   this.updateSyncErrorsIfNeeded(nextSyncErrors, _error)
-                  // console.log('validate', nextSyncErrors)
                 }
                 // const _nextSyncErrors = buildValidate(nextProps.values)
                 // let finalSyncErrors = merge(_nextSyncErrors, nextSyncErrors)
-                // // console.log('field validate', _nextSyncErrors)
 
                 // this.updateSyncErrorsIfNeeded(finalSyncErrors, _error)
               }
@@ -553,7 +550,6 @@ const createReduxForm =
           }
 
           get values() {
-            // console.log(this.props.values, 'get submit values')            
             return this.refs.wrapped.getWrappedInstance().getValues()
           }
 

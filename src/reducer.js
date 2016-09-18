@@ -34,6 +34,7 @@ import 'array-findindex-polyfill'
 import createDeleteInWithCleanUp from './deleteInWithCleanUp'
 import { formatCondName, unformatCondName } from './util/formatConditionalName'
 import * as validators from './validators'
+import { merge } from 'lodash'
 
 const createReducer = structure => {
   const {
@@ -70,7 +71,6 @@ const createReducer = structure => {
   const validate = (result, field) => {
     const formatedName = formatCondName(field)
     const value = getIn(result, `values.${field}`)
-    // console.log('field : ', field, 'value:', value)
 
     const validations = getIn(result, `validations.${formatedName}`)
     let syncErrors = fromJS(getIn(result, 'syncErrors') || {})
@@ -83,23 +83,21 @@ const createReducer = structure => {
           const msg = getIn(val, 'msg')
           const retMsg = func(value)
           const finalMsg = retMsg && msg ? msg : retMsg
+
           if (finalMsg) {
             syncErrors = setIn(syncErrors, field, finalMsg)
           }
         }
       })
     }
-
     return setIn(result, 'syncErrors', toJS(syncErrors))
   }
 
   const clearSyncError = (result, field) => {
     let syncErrors = fromJS(getIn(result, 'syncErrors'))
-    // console.log('before delete.....................',field,  syncErrors)
     syncErrors = deleteInWithCleanUp(syncErrors, field)
-    // console.log('after delete.....................', syncErrors)
 
-    result = setIn(result, 'syncErrors', syncErrors)
+    result = setIn(result, 'syncErrors', toJS(syncErrors))
     return result
   }
 
@@ -162,7 +160,7 @@ const createReducer = structure => {
     }
 
     const mapData = fromJS({ visible: isVisible, cachedValue: cachedValue, ...toJS(parsedCond) })
-    // for iterating, we change name as :
+    // for iterating, we changed name 
     result = setIn(result, `conditions.${fieldName}`, mapData)
 
     if (!isVisible) {
@@ -259,7 +257,7 @@ const createReducer = structure => {
         result = setIn(result, 'anyTouched', true)
       }
 
-      result = validate(result, field)
+      // result = validate(result, field)
       return result
     },
     [CHANGE](state, { meta: { field, touch }, payload }) {
@@ -281,7 +279,6 @@ const createReducer = structure => {
         result = setIn(result, 'anyTouched', true)
       }
 
-
       // Search all conditional which depends on this field and update visible
       const conditions = getIn(result, 'conditions')
       const setVisible = (conditions, parentFieldName, parentIsVisible) => {
@@ -290,7 +287,6 @@ const createReducer = structure => {
           const dependOn = getIn(conditions, `${formatedElementName}.dependOn`)
           const dependValue = getIn(conditions, `${formatedElementName}.dependValue`)
 
-          // console.log('.......... depend name', dependOn, '......parent name', parentFieldName)
           // only find those field name depend on current changing field name          
           if (dependOn === parentFieldName) {
             const elementValue = getIn(result, `values.${parentFieldName}`)
@@ -311,9 +307,9 @@ const createReducer = structure => {
             }
             // find it's child and also set invisible
             setVisible(conditions, elementName, isNewVisible)
-            return true            
+            return true
           }
-        })          
+        })
       }
 
       setVisible(conditions, field, getIn(result, `conditions.${formatedName}.visible`))
@@ -562,10 +558,11 @@ const createReducer = structure => {
       } else {
         result = deleteIn(result, 'error')
       }
+      const _syncErrors = getIn(result, 'syncErrors')
       if (Object.keys(syncErrors).length) {
-        result = setIn(result, 'syncErrors', syncErrors)
+        result = setIn(result, 'syncErrors', merge(_syncErrors || {}, syncErrors))
       } else {
-        result = deleteIn(result, 'syncErrors')
+        result = setIn(result, 'syncErrors', _syncErrors)
       }
       return result
     }
