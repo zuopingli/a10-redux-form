@@ -558,11 +558,11 @@ const createReducer = structure => {
       } else {
         result = deleteIn(result, 'error')
       }
-      const _syncErrors = getIn(result, 'syncErrors')
       if (Object.keys(syncErrors).length) {
+        const _syncErrors = getIn(result, 'syncErrors')
         result = setIn(result, 'syncErrors', merge(_syncErrors || {}, syncErrors))
       } else {
-        result = setIn(result, 'syncErrors', _syncErrors)
+        result = setIn(result, 'syncErrors', {})
       }
       return result
     }

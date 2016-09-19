@@ -64,7 +64,7 @@ const describeField = (name, structure, combineReducers, expect) => {
         </Provider>
       )
 
-      ipv4Input.calls[ 0 ].arguments[ 0 ].input.onChange('4.4.4.4')
+      ipv4Input.calls[ 0 ].arguments[ 0 ].input.onBlur('4.4.4.4')
       expect(ipv4Input.calls[ 1 ].arguments[ 0 ].input.value).toBe('4.4.4.4')
     })
 
@@ -116,13 +116,13 @@ const describeField = (name, structure, combineReducers, expect) => {
       )
       expect(ipv4Input.calls[ 0 ].arguments[ 0 ].meta.error).toBe('Must IPv4')     
 
-      ipv4Input.calls[ 0 ].arguments[ 0 ].input.onChange('4.4.4.4.5')
+      ipv4Input.calls[ 0 ].arguments[ 0 ].input.onBlur('4.4.4.4.5')
       expect(ipv4Input.calls[ 1 ].arguments[ 0 ].meta.error).toBe('Must IPv4')  
 
-      ipv4Input.calls[ 1 ].arguments[ 0 ].input.onChange('')
+      ipv4Input.calls[ 1 ].arguments[ 0 ].input.onBlur('')
       expect(ipv4Input.calls[ 2 ].arguments[ 0 ].meta.error).toBe('Required')     
 
-      ipv4Input.calls[ 2 ].arguments[ 0 ].input.onChange('1.2.3.4')
+      ipv4Input.calls[ 2 ].arguments[ 0 ].input.onBlur('1.2.3.4')
       // console.log(ipv4Input.calls[ 3 ].arguments[ 0 ].meta)
 
       expect(ipv4Input.calls[ 3 ].arguments[ 0 ].meta.error).toNotExist()
@@ -175,7 +175,7 @@ const describeField = (name, structure, combineReducers, expect) => {
       const form = TestUtils.findRenderedDOMComponentWithTag(dom, 'form')
       expect(onSubmit).toNotHaveBeenCalled()
       // expect(onSubmit).toHaveBeenCalled()
-      // ipv4Input.calls[0].arguments[0].input.onChange('123')
+      // ipv4Input.calls[0].arguments[0].input.onBlur('123')
 
       const stub = TestUtils.findRenderedComponentWithType(dom, TestForm)
       // invalid because no value for 'bar' field
@@ -245,7 +245,7 @@ const describeField = (name, structure, combineReducers, expect) => {
 
       // console.log('Changing wildcard value to false...................****************************')
       // IPv4 not right, so when submitting, need show error
-      wildcardInput.calls[0].arguments[0].input.onChange(false)
+      wildcardInput.calls[0].arguments[0].input.onBlur(false)
       expect(getConditionsVisible(store.getState(), 'virtual-server.wildcard')).toBe(true)
       expect(getConditionsVisible(store.getState(), 'virtual-server.is-ipv4')).toBe(true)
       expect(getConditionsVisible(store.getState(), 'virtual-server.ipv4')).toBe(true)
@@ -260,7 +260,7 @@ const describeField = (name, structure, combineReducers, expect) => {
       })
 
       // console.log('Changing isIpv4Input value to false...................****************************')
-      isIpv4Input.calls[0].arguments[0].input.onChange(false)
+      isIpv4Input.calls[0].arguments[0].input.onBlur(false)
       expect(getConditionsVisible(store.getState(), 'virtual-server.ipv4')).toBe(false)
       expect(getConditionsVisible(store.getState(), 'virtual-server.ipv6')).toBe(true)
       expect(getConditionsVisible(store.getState(), 'virtual-server.netmask')).toBe(false)
@@ -285,7 +285,7 @@ const describeField = (name, structure, combineReducers, expect) => {
 
       // console.log('Changing wildcardInput value to true...................****************************')
       // turn off the wildcard and to see if virtual-server fields visible are right
-      wildcardInput.calls[1].arguments[0].input.onChange(true)
+      wildcardInput.calls[1].arguments[0].input.onBlur(true)
       expect(getConditionsVisible(store.getState(), 'virtual-server.is-ipv4')).toBe(false)
       expect(getConditionsVisible(store.getState(), 'virtual-server.ipv4')).toBe(false)
       expect(getConditionsVisible(store.getState(), 'virtual-server.ipv6')).toBe(false)
@@ -295,7 +295,7 @@ const describeField = (name, structure, combineReducers, expect) => {
 
       // console.log('Changing wildcardInput value to false...................****************************')
       // IPv4 not right, so when submitting, need show error
-      wildcardInput.calls[2].arguments[0].input.onChange(false)
+      wildcardInput.calls[2].arguments[0].input.onBlur(false)
       // console.log(getIn(store.getState(), 'form.testForm.conditions'))
       expect(getConditionsVisible(store.getState(), 'virtual-server.wildcard')).toBe(true)
       expect(getConditionsVisible(store.getState(), 'virtual-server.is-ipv4')).toBe(true)

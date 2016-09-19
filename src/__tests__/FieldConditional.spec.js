@@ -108,7 +108,7 @@ const describeField = (name, structure, combineReducers, expect) => {
       )
 
       // change money to see if money hide
-      moneyInput.calls[ 0 ].arguments[ 0 ].input.onChange(10000)
+      moneyInput.calls[ 0 ].arguments[ 0 ].input.onBlur(10000)
       expect(moneyInput.calls[ 1 ].arguments[ 0 ].input.value).toBe(10000)
       expect(moneyInput.calls.length).toBe(2)
       expect(getConditionsVisible(store.getState(), 'money')).toBe(true)
@@ -146,7 +146,7 @@ const describeField = (name, structure, combineReducers, expect) => {
         </Provider>
       )      
       // change male to see if all subs are hidden
-      maleInput.calls[ 0 ].arguments[ 0 ].input.onChange(false)
+      maleInput.calls[ 0 ].arguments[ 0 ].input.onBlur(false)
       expect(maleInput.calls[ 1 ].arguments[ 0 ].input.value).toBe(false)
       // expect(moneyInput.calls.length).toBe(1)
       // expect(richInput.calls.length).toBe(1) 
@@ -154,7 +154,7 @@ const describeField = (name, structure, combineReducers, expect) => {
       expect(getConditionsVisible(store.getState(), 'rich')).toBe(false)   
 
       // change male to see if all subs are visible
-      // maleInput.calls[ 0 ].arguments[ 0 ].input.onChange(true)
+      // maleInput.calls[ 0 ].arguments[ 0 ].input.onBlur(true)
       // expect(maleInput.calls[ 2 ].arguments[ 0 ].input.value).toBe(true)
       // expect(getConditionsVisible(store.getState(), 'money')).toBe(true)
       // expect(getConditionsVisible(store.getState(), 'rich')).toBe(true)   
@@ -192,18 +192,18 @@ const describeField = (name, structure, combineReducers, expect) => {
         </Provider>
       )      
       // if switch visible on, some kids visible on
-      maleInput.calls[ 0 ].arguments[ 0 ].input.onChange(true)
+      maleInput.calls[ 0 ].arguments[ 0 ].input.onBlur(true)
       expect(getConditionsVisible(store.getState(), 'money')).toBe(true)
       expect(getConditionsVisible(store.getState(), 'rich')).toBe(false)
 
       // if switch visible off, all kids visible are off
-      maleInput.calls[ 0 ].arguments[ 0 ].input.onChange(false)
+      maleInput.calls[ 0 ].arguments[ 0 ].input.onBlur(false)
       expect(getConditionsVisible(store.getState(), 'money')).toBe(false)
       expect(getConditionsVisible(store.getState(), 'rich')).toBe(false)
 
       // if switch visible back to on, some kids on
-      maleInput.calls[ 0 ].arguments[ 0 ].input.onChange(true)
-      moneyInput.calls[ 0 ].arguments[ 0 ].input.onChange(1000)
+      maleInput.calls[ 0 ].arguments[ 0 ].input.onBlur(true)
+      moneyInput.calls[ 0 ].arguments[ 0 ].input.onBlur(1000)
       expect(getConditionsVisible(store.getState(), 'money')).toBe(true)
       expect(getConditionsVisible(store.getState(), 'rich')).toBe(true)
 
@@ -254,13 +254,13 @@ const describeField = (name, structure, combineReducers, expect) => {
 
       // then change main value to see if sub values changed
       // if sub not changed, please fix [CHANGE] action
-      maleInput.calls[ 0 ].arguments[ 0 ].input.onChange(true)
+      maleInput.calls[ 0 ].arguments[ 0 ].input.onBlur(true)
       expect(getFieldValue(store.getState(), 'male')).toBe(true)
       expect(getFieldValue(store.getState(), 'money')).toBe(1000)
       expect(getFieldValue(store.getState(), 'rich')).toBe(false)
 
       // change it back to initial
-      maleInput.calls[ 0 ].arguments[ 0 ].input.onChange(false)      
+      maleInput.calls[ 0 ].arguments[ 0 ].input.onBlur(false)      
       expect(getFieldValue(store.getState(), 'male')).toBe(false)
       expect(getFieldValue(store.getState(), 'money')).toBe(undefined)
       expect(getFieldValue(store.getState(), 'rich')).toBe(undefined)
@@ -340,13 +340,13 @@ const describeField = (name, structure, combineReducers, expect) => {
       expect(getConditionsVisible(store.getState(), 'global.china.rich')).toBe(true)
 
       // if switch visible off, all kids visible are off
-      maleInput.calls[ 0 ].arguments[ 0 ].input.onChange(false)
+      maleInput.calls[ 0 ].arguments[ 0 ].input.onBlur(false)
       expect(getConditionsVisible(store.getState(), 'global.china.money')).toBe(false)
       expect(getConditionsVisible(store.getState(), 'global.china.rich')).toBe(false)
 
       // if switch visible back to on, some kids on
-      maleInput.calls[ 0 ].arguments[ 0 ].input.onChange(true)
-      moneyInput.calls[ 0 ].arguments[ 0 ].input.onChange(1000)
+      maleInput.calls[ 0 ].arguments[ 0 ].input.onBlur(true)
+      moneyInput.calls[ 0 ].arguments[ 0 ].input.onBlur(1000)
       expect(getConditionsVisible(store.getState(), 'global.china.money')).toBe(true)
       expect(getConditionsVisible(store.getState(), 'global.china.rich')).toBe(true)
 
